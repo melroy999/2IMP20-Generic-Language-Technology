@@ -1,0 +1,8 @@
+begin
+	declare
+		n : natural, s : string;
+		
+		n := 10;
+		s := "a";
+		while n do s := s || "a"; n := n - 1 od
+end
