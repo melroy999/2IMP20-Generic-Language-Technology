@@ -69,7 +69,7 @@ syntax Type
 // In general, each for loop can be represented by a while loop. This can be done easily with the definitions above.
 // As an illustration of our claim, we have the following code snippet example, using PICOs syntax:
 // 1. <init>
-// 2. while(<cond>) do
+// 2. while <cond> do
 // 3. 	<body>
 // 4. 	<inc>
 // 5. od
@@ -78,12 +78,18 @@ syntax Type
 // The only remaining choice is the syntax itself of the for loop. 
 // Similarly to the while loop, we will start the body of the loop with "do", and end it with "od".
 // In most other languages, loops with an incrementation component are represented by a semicolon separated tuple, which we will adhere to too.
-// TODO Statements are not limited to assignments... so init can be an entire loop.
+// 
+// Note that we have split the assignment statement and other statements.
+// We noticed that by the definition of the for loop, we could nest if, while and for constructs as init and inc values for the for loop.
+// We are not sure whether this is syntactically incorrect or a semantical problem.
+// So to be sure, we have solved this issue by being more specific with our definition of statements.
+syntax AsgStatement = asgStat: Id var ":=" Expression val;
+
 syntax Statement 
-   = asgStat: Id var ":=" Expression val 
+   = AsgStatement 
    | ifElseStat: "if" Expression cond "then" {Statement ";"}*  thenPart "else" {Statement ";"}* elsePart "fi"
    | whileStat: "while" Expression cond "do" {Statement ";"}* body "od"
-   | forStat: "for" Statement init ";" Expression cond ";" Statement inc "do" {Statement ";"}* body "od"
+   | forStat: "for" AsgStatement init ";" Expression cond ";" AsgStatement inc "do" {Statement ";"}* body "od"
   ;  
      
 // Note that we have added an additional boolean expression "boolCon", introducing the "true" and "false" keywords to expressions.
@@ -96,6 +102,7 @@ syntax Statement
 // However, since the introduction does, we have added them anyhow. 
 // The operators "==" and "!=" take precedence over the "and" and "or" operators, as seen in most if not all programming languages. 
 // Note that they should be at the same level of precedence, since "==" and "!=" have similar functionality/behavior.
+// Operator "and" has precedence over "or", since this is standard in boolean logic.
 syntax Expression 
    = id: Id name
    | strCon: String string
@@ -110,9 +117,8 @@ syntax Expression
    > left ( equals: Expression lhs "==" Expression rhs
 		  | nequals: Expression lhs "!=" Expression rhs
 		  )
-   > left ( and: Expression lhs "and" Expression rhs
-          | or: Expression lhs "or" Expression rhs
-   		  )
+   > left and: Expression lhs "and" Expression rhs
+   > left or: Expression lhs "or" Expression rhs
   ;
 
 public start[Program] program(str s) {
