@@ -1,0 +1,14 @@
+begin
+	declare
+		n1 : natural, n2 : natural, b1 : boolean, b2 : boolean;
+		
+		%% Incorrect as we require an assignment statement as the first part of a for
+		for true; true; n1 := n1 + 1 do od;
+		
+		%% Incorrect as we require a condition as the second part of a for
+		for n1 := 0; n1 := 1; n1 := n1 + 1 do od;
+		
+		%% Incorrect as we require an assignment statement as the third part of a for
+		for n1 := 0; n1 != n1 + 1; n1 + 0 do od
+		
+end
