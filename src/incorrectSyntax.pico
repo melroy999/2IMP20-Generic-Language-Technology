@@ -2,13 +2,38 @@ begin
 	declare
 		n1 : natural, n2 : natural, b1 : boolean, b2 : boolean;
 		
+		%% Different incorrect syntactical applications of for loops.
 		%% Incorrect as we require an assignment statement as the first part of a for
 		for true; true; n1 := n1 + 1 do od;
+		
+		%% Incorrect as we require an assignment statement as the first part of a for
+		for ; true; n1 := n1 + 1 do od;
 		
 		%% Incorrect as we require a condition as the second part of a for
 		for n1 := 0; n1 := 1; n1 := n1 + 1 do od;
 		
 		%% Incorrect as we require an assignment statement as the third part of a for
-		for n1 := 0; n1 != n1 + 1; n1 + 0 do od
+		for n1 := 0; n1 != n1 + 1; n1 + 0 do od;
 		
+		%% Different incorrect syntactical applications of logical operators.
+		%% Incorrect as we require an expression to be after a not
+		b1:= not or n2 != 100;
+		
+		%% Incorrect as we require an expression to be on the rhs of an and
+		b1:= not n2 != 100 and;
+		
+		%% Incorrect as we require an expression to be on the lhs of an and
+		b1 := and n2 != 100;
+		
+		%% Incorrect as we require an expression to be on the lhs and rhs of an and
+		b1:= and and not n2 != 100;
+		
+		%% Incorrect as we require an expression to be on the rhs of an or
+		b1:= not n2 != 100 or;
+		
+		%% Incorrect as we require an expression to be on the lhs of an or
+		b1:= or n2 != 100;
+		
+		%% Incorrect as we require an expression to be on the lhs and rhs of an or
+		b1:= or or not n2 != 100		
 end
