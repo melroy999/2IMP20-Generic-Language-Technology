@@ -1,0 +1,7 @@
+begin
+	declare
+		b2 : boolean;
+		
+		b2 := true or "";
+		b2 := true or false
+end
