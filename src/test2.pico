@@ -1,7 +1,119 @@
 begin
 	declare
-		b2 : boolean;
+		b1 : boolean, b2 : boolean, b3 : boolean, s1 : string, s2 : string, n1 : natural, n2 : natural;
+		
+		%% We start with validating the and, or and not operators, which only accept booleans as input.
+		%% In these tests, we try all valid combinations of variables and true/false constants.
+		%% Note that the variables are not initialized. Checking for value initialisation is outside the scope of this assignment.
+		b3 := true or false;
+		b3 := false and true;
+		b3 := not true;
+		
+		b3 := b1 or false;
+		b3 := b2 and true;
+		b3 := true or b1;
+		b3 := false and b2;
+		
+		b3 := b1 or b2;
+		b3 := b1 and b2;
+		b3 := not b1;
+		
+		%% Here, we continue testing the and, or and not operators, but this time with faulty input.
+		%% We provide strings and natural numbers as input to the operators.
+		b3 := "" or "";
+		b3 := "" and "";
+		b3 := not "";
+		
+		b3 := 10 or 10;
+		b3 := 10 and 10;
+		b3 := not 10;
+		
+		b3 := "" or 10;
+		b3 := 10 and "";
+		b3 := not "";
+		b3 := not 10;
+		
+		b3 := s1 or s2;
+		b3 := s1 and s2;
+		b3 := not s1;
+		
+		b3 := n1 or n2;
+		b3 := n1 and n2;
+		b3 := not n1;
+		
+		b3 := true or s1;
+		b3 := true or "";
+		b3 := s2 or true;
+		b3 := "" or true;
+		
+		b3 := true and n1;
+		b3 := true and 10;
+		b3 := n2 and true;
+		b3 := 10 and true;
+		
+		%% Next to that, we also try to use these operators in operators only accepting string or natural inputs.
+		n1 := true or false;
+		n1 := true and false;
+		n1 := not false;
+		s1 := true or false;
+		s1 := true and false;
+		s1 := not true;
+		
+		
+		%% We proceed with testing the equals and not equals operators, with valid inputs.
+		%% In these tests, we match the type of the left-hand side with the right-hand side, using both variables and constant expressions.
+		b3 := b1 == b2;
+		b3 := b1 != b2;
+		b3 := s1 == s2;
+		b3 := s1 != s2;
+		b3 := n1 == n2;
+		b3 := n1 != n2;
+		
+		b3 := b1 == false;
+		b3 := b1 != true;
+		b3 := s1 == "";
+		b3 := s1 != "";
+		b3 := n1 == 10;
+		b3 := n1 != 10;
+		
+		b3 := true == b2;
+		b3 := false != b2;
+		b3 := "" == s2;
+		b3 := "" != s2;
+		b3 := 10 == n2;
+		b3 := 10 != n2;
+		
+		b3 := true == false;
+		b3 := false != true;
+		b3 := "" == "";
+		b3 := "" != "";
+		b3 := 10 == 10;
+		b3 := 10 != 10;
+		
+		%% Here, we continue testing the equals and not equals operators, but this time with faulty input.
+		%% Note that the right-hand side is always shown as invalid, which is by design. See the Typecheck file for more details.
+		b3 := b1 == n2;
+		b3 := b1 != n2;
+		b3 := s1 == b2;
+		b3 := s1 != b2;
+		b3 := n1 == s2;
+		b3 := n1 != s2;
+		
+		b3 := b1 == "";
+		b3 := b1 != "";
+		b3 := s1 == 10;
+		b3 := s1 != 10;
+		b3 := n1 == s2;
+		b3 := n1 != s2;
+		
+		%% TODO since we changed some of the original code as well, we need to write tests for the altered components.
+		
 		
 		b2 := true or "";
-		b2 := true or false
+		b2 := 8 or false;
+		b2 := true or false;
+		b2 := 8 == 8;
+		b2 := "" != 9;
+		b2 := true == false;
+		b2 := (true == false) == false
 end

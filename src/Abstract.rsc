@@ -1,6 +1,6 @@
 module Abstract
 
-// Added the boolean() type.
+// Added the boolean() type to the types.
 public data TYPE = natural() | string() | boolean();    
 	  
 public alias PicoId = str;                  
@@ -11,7 +11,7 @@ public data PROGRAM =
 public data DECL =
   decl(PicoId name, TYPE tp);
 
-// Added the boolCon, not, equals, not equals, and and or expressions.
+// Added the boolCon, not, equals, not equals, and and or expressions to the expressions.
 public data EXP = 
        id(PicoId name)
      | natCon(int iVal)
@@ -27,7 +27,7 @@ public data EXP =
      | or(EXP left, EXP right)
      ;
 
-// Added the for statement. 
+// Added the for statement to the statements. 
 public data STATEMENT =
        asgStat(PicoId name, EXP exp)
      | ifElseStat(EXP exp, list[STATEMENT] thenpart, list[STATEMENT] elsepart)
