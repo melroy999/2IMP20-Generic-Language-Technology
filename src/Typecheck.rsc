@@ -40,10 +40,10 @@ TYPE getType(exp:nequals(EXP E1, EXP E2), TENV env) = boolean();
 // This way, we don't accidently mismatch the type stored here and in the getType(), they will always match as the source is the same.
 // Here, we start with the originally defined expressions, which all retain the original functionality.
 TENV checkExp(exp:natCon(int N), TYPE req, TENV env) =                              
-  req == getType(exp, env) ? env : addError(env, exp@location, required(req, "natural"));
+  req == getType(exp, env) ? env : addError(env, exp@location, required(req, getType(exp, env)));
 
 TENV checkExp(exp:strCon(str S), TYPE req, TENV env) =
- req == getType(exp, env) ? env : addError(env, exp@location, required(req, "string"));
+ req == getType(exp, env) ? env : addError(env, exp@location, required(req, getType(exp, env)));
  
 TENV checkExp(exp:id(PicoId Id), TYPE req, TENV env) {                              
   if(!env.symbols[Id]?)
@@ -54,35 +54,35 @@ TENV checkExp(exp:id(PicoId Id), TYPE req, TENV env) {
 
 TENV checkExp(exp:add(EXP E1, EXP E2), TYPE req, TENV env) =                        
   req == getType(exp, env) ? checkExp(E1, natural(), checkExp(E2, natural(), env))
-                   : addError(env, exp@location, required(req, "natural"));
+                   : addError(env, exp@location, required(req, getType(exp, env)));
   
 TENV checkExp(exp:sub(EXP E1, EXP E2), TYPE req, TENV env) =                      
   req == getType(exp, env) ? checkExp(E1, natural(), checkExp(E2, natural(), env))
-                   : addError(env, exp@location, required(req, "natural"));
+                   : addError(env, exp@location, required(req, getType(exp, env)));
 
 TENV checkExp(exp:conc(EXP E1, EXP E2), TYPE req, TENV env) =                    
   req == getType(exp, env) ? checkExp(E1, string(), checkExp(E2, string(), env))
-                   : addError(env, exp@location, required(req, "string"));
+                   : addError(env, exp@location, required(req, getType(exp, env)));
 
 // Here, we continue with defining checks for the new expressions, namely boolcon, not, and, or, equals and not equals.
 // Note that all of these checks validate whether the return type of the expression matches the expected type.
 TENV checkExp(exp:boolCon(bool B), TYPE req, TENV env) =
- req == getType(exp, env) ? env : addError(env, exp@location, required(req, "boolean"));
+ req == getType(exp, env) ? env : addError(env, exp@location, required(req, getType(exp, env)));
  
 // Added a check for the not operator, which validates whether the input is a boolean value.
 TENV checkExp(exp:not(EXP E), TYPE req, TENV env) =                        
  req == getType(exp, env) ? checkExp(E, boolean(), env)
-  				   : addError(env, exp@location, required(req, "boolean"));
+  				   : addError(env, exp@location, required(req, getType(exp, env)));
   				   
 // Added a check for the and operator.
 TENV checkExp(exp:and(EXP E1, EXP E2), TYPE req, TENV env) =                        
   req == getType(exp, env) ? checkExp(E1, boolean(), checkExp(E2, boolean(), env))
-                   : addError(env, exp@location, required(req, "boolean"));
+                   : addError(env, exp@location, required(req, getType(exp, env)));
   
 // Added a check for the or operator.
 TENV checkExp(exp:or(EXP E1, EXP E2), TYPE req, TENV env) =                      
   req == getType(exp, env) ? checkExp(E1, boolean(), checkExp(E2, boolean(), env))
-                   : addError(env, exp@location, required(req, "boolean"));
+                   : addError(env, exp@location, required(req, getType(exp, env)));
 
 // Added a check for the equals operator.
 // Note here that we consider the left-hand side of the equation to be the desired type, which is used to validate the type of the right-hand side.
@@ -91,7 +91,7 @@ TENV checkExp(exp:or(EXP E1, EXP E2), TYPE req, TENV env) =
 TENV checkExp(exp:equals(EXP E1, EXP E2), TYPE req, TENV env) {
   try {
 	return req == getType(exp, env) ? checkExp(E1, getType(E1, env), checkExp(E2, getType(E1, env), env))
-	                   : addError(env, exp@location, required(req, "boolean"));
+	                   : addError(env, exp@location, required(req, getType(exp, env)));
   } catch NoSuchKey(value key): {
   	// The left-hand side of the equation is an undefined variable. The type of the expression cannot be established.
   	env2 = addError(env, E1@location, "Undeclared variable <key>");
@@ -114,7 +114,7 @@ TENV checkExp(exp:equals(EXP E1, EXP E2), TYPE req, TENV env) {
 TENV checkExp(exp:nequals(EXP E1, EXP E2), TYPE req, TENV env) {
   try {
 	return req == getType(exp, env) ? checkExp(E1, getType(E1, env), checkExp(E2, getType(E1, env), env))
-	                   : addError(env, exp@location, required(req, "boolean"));
+	                   : addError(env, exp@location, required(req, getType(exp, env)));
   } catch NoSuchKey(value key): {
   	// The left-hand side of the equation is an undefined variable. The type of the expression cannot be established.
   	env2 = addError(env, E1@location, "Undeclared variable <key>");
