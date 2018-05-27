@@ -106,6 +106,13 @@ begin
 		b3 := n1 == s2;
 		b3 := n1 != s2;
 		
+		%% In particular, undeclared variables are interesting because of the way our type checking works.
+		%%b3 := b == true or 10;
+		%% TODO curious, or 10 is not seen as invalid when b is undefined on the left hand side, while it is on the right hand side.
+		b3 := b or 10 == b or 10;
+		%%b3 := b == n;
+		%%b3 := true == n;
+		
 		%% TODO since we changed some of the original code as well, we need to write tests for the altered components.
 		
 		

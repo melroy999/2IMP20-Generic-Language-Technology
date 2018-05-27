@@ -87,19 +87,48 @@ TENV checkExp(exp:or(EXP E1, EXP E2), TYPE req, TENV env) =
 // Added a check for the equals operator.
 // Note here that we consider the left-hand side of the equation to be the desired type, which is used to validate the type of the right-hand side.
 // In other words, the left-hand side of the equation will never create an invalid-type error, given that the left-hand-side expression is correct.
-// TODO make sure that an error is shown, if the id is undefined.
-TENV checkExp(exp:equals(EXP E1, EXP E2), TYPE req, TENV env) = 
-  req == getType(exp, env) ? checkExp(E1, getType(E1, env), checkExp(E2, getType(E1, env), env))
-                   : addError(env, exp@location, required(req, "boolean"));
+// Note that it may occur that the left-hand side is an undefined id, which should be handled appropriately through an error.
+TENV checkExp(exp:equals(EXP E1, EXP E2), TYPE req, TENV env) {
+  try {
+	return req == getType(exp, env) ? checkExp(E1, getType(E1, env), checkExp(E2, getType(E1, env), env))
+	                   : addError(env, exp@location, required(req, "boolean"));
+  } catch NoSuchKey(value key): {
+  	// The left-hand side of the equation is an undefined variable. The type of the expression cannot be established.
+  	env2 = addError(env, E1@location, "Undeclared variable <key>");
+  	
+  	// Can we resolve the type of the right-hand side?
+  	try {
+  	  // If we can, add the errors we find on the right-hand side.
+  	  return checkExp(E2, getType(E2, env2), env2);
+  	} catch NoSuchKey(value key2): {
+  	  // We failed to find the type of the right-hand side, mark both sides as undeclared.
+  	  return addError(env2, E2@location, "Undeclared variable <key2>");
+  	}
+  }
+}
   
 // Added a check for the equals operator.
 // Note here that we consider the left-hand side of the equation to be the desired type, which is used to validate the type of the right-hand side.
 // In other words, the left-hand side of the equation will never create an invalid-type error, given that the left-hand-side expression is correct.
-// TODO make sure that an error is shown, if the id is undefined.
-TENV checkExp(exp:nequals(EXP E1, EXP E2), TYPE req, TENV env) = 
-  req == getType(exp, env) ? checkExp(E1, getType(E1, env), checkExp(E2, getType(E1, env), env))
-                   : addError(env, exp@location, required(req, "boolean"));
-
+// Note that it may occur that the left-hand side is an undefined id, which should be handled appropriately through an error.
+TENV checkExp(exp:nequals(EXP E1, EXP E2), TYPE req, TENV env) {
+  try {
+	return req == getType(exp, env) ? checkExp(E1, getType(E1, env), checkExp(E2, getType(E1, env), env))
+	                   : addError(env, exp@location, required(req, "boolean"));
+  } catch NoSuchKey(value key): {
+  	// The left-hand side of the equation is an undefined variable. The type of the expression cannot be established.
+  	env2 = addError(env, E1@location, "Undeclared variable <key>");
+  	
+  	// Can we resolve the type of the right-hand side?
+  	try {
+  	  // If we can, add the errors we find on the right-hand side.
+  	  return checkExp(E2, getType(E2, env2), env2);
+  	} catch NoSuchKey(value key2): {
+  	  // We failed to find the type of the right-hand side, mark both sides as undeclared.
+  	  return addError(env2, E2@location, "Undeclared variable <key2>");
+  	}
+  }
+}
 
 // check a statement
 
@@ -126,7 +155,6 @@ TENV checkStat(stat:whileStat(EXP Exp, list[STATEMENT] Stats1), TENV env) {
 }
 
 // Added a check for the for statement.
-// forStat(STATEMENT init, EXP cond, STATEMENT inc, list[STATEMENT] body)
 TENV checkStat(stat:forStat(STATEMENT init, EXP cond, STATEMENT inc, list[STATEMENT] Stats1), TENV env) {
     env0 = checkExp(cond, boolean(), env);
     env1 = checkStat(init, env0);
