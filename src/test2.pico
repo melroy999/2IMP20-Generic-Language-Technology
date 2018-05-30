@@ -125,6 +125,7 @@ begin
 		while n1 do od;
 		while not n1 or b1 do od;
 		while n1 == b1 do od;
+		while b and n != 10 and n1 == 10 do od;
 		
 		%% Checking for loops
 		for n1 := 0; n1 != n2; n1 := n1 + 1 do od;
@@ -133,6 +134,7 @@ begin
 
 		for b1 := 0; true; n1 := n1 + 1 do od;
 		for n := 0; true; n1 := n1 + 1 do od;
+		for n1 := 0 or b1 and n2 != 0; true; n1 := n1 + 1 do od;
 		
 		for n1 := 0; n1; n1 := n1 + 1 do od;
 		for n1 := 0; b; n1 := n1 + 1 do od;
