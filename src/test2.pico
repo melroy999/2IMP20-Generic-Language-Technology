@@ -111,7 +111,36 @@ begin
 		b3 := b == n;
 		b3 := true == n;
 		
-		%% TODO since we changed some of the original code as well, we need to write tests for the altered components.
+		%% Since we changed some of the original code as well, we need to write tests for the altered components.
+		if b1 and b2 or false then else fi;
+		if not (n1 == 10) and not false or n2 != 100 then else fi;
+		
+		if n1 then else fi;
+		if n1 == b1 then else fi;
+		if b then else fi;
+	
+		while b1 and b2 or false do od;	
+		while not (n1 == 10) and not false or n2 != 100 do od;
+		
+		while n1 do od;
+		while not n1 or b1 do od;
+		while n1 == b1 do od;
+		
+		%% Checking for loops
+		for n1 := 0; n1 != n2; n1 := n1 + 1 do od;
+		for n1 := 0; n1 != n2 or b1; n1 := n1 + 1 do od;
+		for n1 := 0; n1 != n2 and not b2; n2 := n2 + 1 do od;
+
+		for b1 := 0; true; n1 := n1 + 1 do od;
+		for n := 0; true; n1 := n1 + 1 do od;
+		
+		for n1 := 0; n1; n1 := n1 + 1 do od;
+		for n1 := 0; b; n1 := n1 + 1 do od;
+		for n1 := 0; b1 or n1; n1 := n1 + 1 do od;
+		
+		for n1 := 0; true; n1 := b1 do od;
+		for n1 := 0; true; n := n1 + 1 do od;
+		for n1 := 0; true; n1 := n1 + 1 or b1 do od;
 		
 		
 		b2 := true or "";
