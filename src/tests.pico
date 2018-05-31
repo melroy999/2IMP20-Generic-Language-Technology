@@ -142,14 +142,5 @@ begin
 		
 		for n1 := 0; true; n1 := b1 do od;
 		for n1 := 0; true; n := n1 + 1 do od;
-		for n1 := 0; true; n1 := n1 + 1 or b1 do od;
-		
-		
-		b2 := true or "";
-		b2 := 8 or false;
-		b2 := true or false;
-		b2 := 8 == 8;
-		b2 := "" != 9;
-		b2 := true == false;
-		b2 := (true == false) == false
+		for n1 := 0; true; n1 := n1 + 1 or b1 do od
 end
