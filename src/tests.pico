@@ -2,6 +2,10 @@ begin
 	declare
 		b1 : boolean, b2 : boolean, b3 : boolean, s1 : string, s2 : string, n1 : natural, n2 : natural;
 		
+		%% =====================================================================================================
+		%% Test related to the first part of the assignment, involving the boolean expressions.
+		%% =====================================================================================================
+		
 		%% We start with validating the and, or and not operators, which only accept booleans as input.
 		%% In these tests, we try all valid combinations of variables and true/false constants.
 		%% Note that the variables are not initialized. Checking for value initialisation is outside the scope of this assignment.
@@ -59,7 +63,6 @@ begin
 		s1 := true and false;
 		s1 := not true;
 		
-		
 		%% We proceed with testing the equals and not equals operators, with valid inputs.
 		%% In these tests, we match the type of the left-hand side with the right-hand side, using both variables and constant expressions.
 		b3 := b1 == b2;
@@ -111,7 +114,41 @@ begin
 		b3 := b == n;
 		b3 := true == n;
 		
+		%% As a finisher, we will check more complex nested structures.
+		b1 := not ((true || n1) != (n2 - b1)) and (b == 10 + s1);
+		b1 := not (("2IMP20" || "_" || "GLT") == "2IMP20_GLT") and (((b1 == b2) or (b1 != b2)) and (n1 + n2 != n2 - n1));
+		b1 := b1 == s1 != n1 == b;
+		b1 := b1 == (s1 != n1) == b;
+		
+		
+		%% =====================================================================================================
+		%% Test related to the second part of the assignment, involving the for statement.
+		%% =====================================================================================================
+		
+		%% Note that the statements in the for statement cannot be for/while/if by syntax.
+		for n1 := 0; n1 != n2; n1 := n1 + 1 do od;
+		for n1 := 0; n1 != n2 or b1; n1 := n1 + 1 do od;
+		for n1 := 0; n1 != n2 and not b2; n2 := n2 + 1 do od;
+
+		for b1 := 0; true; n1 := n1 + 1 do od;
+		for n := 0; true; n1 := n1 + 1 do od;
+		for n1 := 0 or b1 and n2 != 0; true; n1 := n1 + 1 do od;
+		
+		for n1 := 0; n1; n1 := n1 + 1 do od;
+		for n1 := 0; s1 || ""; n1 := n1 + 1 do od;
+		for n1 := 0; b; n1 := n1 + 1 do od;
+		for n1 := 0; b1 or n1; n1 := n1 + 1 do od;
+		
+		for n1 := 0; true; n1 := b1 do od;
+		for n1 := 0; true; n := n1 + 1 do od;
+		for n1 := 0; true; n1 := n1 + 1 or b1 do od;
+		
+		
+		%% =====================================================================================================
 		%% Since we changed some of the original code as well, we need to write tests for the altered components.
+		%% =====================================================================================================
+		
+		%% First, we do tests for the changed if and while condition types, which have been changed to booleans.
 		if b1 and b2 or false then else fi;
 		if not (n1 == 10) and not false or n2 != 100 then else fi;
 		
@@ -127,20 +164,13 @@ begin
 		while n1 == b1 do od;
 		while b and n != 10 and n1 == 10 do od;
 		
-		%% Checking for loops
-		for n1 := 0; n1 != n2; n1 := n1 + 1 do od;
-		for n1 := 0; n1 != n2 or b1; n1 := n1 + 1 do od;
-		for n1 := 0; n1 != n2 and not b2; n2 := n2 + 1 do od;
-
-		for b1 := 0; true; n1 := n1 + 1 do od;
-		for n := 0; true; n1 := n1 + 1 do od;
-		for n1 := 0 or b1 and n2 != 0; true; n1 := n1 + 1 do od;
-		
-		for n1 := 0; n1; n1 := n1 + 1 do od;
-		for n1 := 0; b; n1 := n1 + 1 do od;
-		for n1 := 0; b1 or n1; n1 := n1 + 1 do od;
-		
-		for n1 := 0; true; n1 := b1 do od;
-		for n1 := 0; true; n := n1 + 1 do od;
-		for n1 := 0; true; n1 := n1 + 1 or b1 do od
+		%% Next, we refactored the types of each of the expressions.
+		%% Thus, we should test the correctness of the id, natCon, strCon, add, sub and conc expression types.
+		%% These tests are rather trivial on purpose, since, in our opinion, they are rather superfluous.
+		b1 := true;
+		s1 := "";
+		n1 := 10;
+		n1 := n1 + 10;
+		n1 := n1 - 10;
+		s1 := "" || ""
 end
