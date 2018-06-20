@@ -8,6 +8,8 @@ import vis::Figure;
 import vis::Render;
 
 import Syntax;
+import Abstract;
+import Typecheck;
 
 //  define the language name and extension
 
@@ -19,7 +21,17 @@ Tree parser(str x, loc l) {
     return parse(#Program, x, l);
 }
 
+public Program checkPAProgram(Program x) {
+	//p = implode(#PROGRAM, x);
+	//env = checkProgram(p);
+	//errors = { error(v, l) | <loc l, Id v> <- env.errors };
+	
+	errors = {};
+	
+	return x[@messages = errors];
+}
+
 public void registerPA() {
   registerLanguage(PA_NAME, PA_EXT, parser);
-  //registerAnnotator(PA_NAME, checkPAProgram);
+  registerAnnotator(PA_NAME, checkPAProgram);
 }
