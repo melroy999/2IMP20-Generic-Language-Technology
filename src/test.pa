@@ -1,7 +1,11 @@
 process BOB { 
-	initial state A := a.A;
-	state B := b.B;
+	initial state A := a.A + b.1 + c.0;
+	state B(7) := b.B(1);
+	state C(7) := c.C(n + 1) + b.D(n - 1) * c.1 with n in range(0, 5);
+	state D(7) := c.D(n) + B(7) with n in natural;
 }
+
 process BOB2 {
 	initial state A := a.A;
+	state C := c.C;
 }
