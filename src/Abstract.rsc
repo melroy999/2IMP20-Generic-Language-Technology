@@ -5,14 +5,25 @@ public alias Id = str;
 public data PROGRAM = program(list[STATEMENT] stats);
 
 public data EXP = state(str name)
+ 				| recursion(str name, EXP exp)
 			    | transition(str name)
 			    | action(EXP left, EXP right)
 			    | sequential(EXP left, EXP right)
 			    | choice(EXP left, EXP right)
+			    | id(str name)
+			    | natCon(int i)
+			    | add(EXP left, EXP right)
+			    | sub(EXP left, EXP right)
+			    | rangeContext(int min, int max)
+			    | naturalContext()
 			    ;
      
 public data STATEMENT = processStatement(str name, STATEMENT initialState, list[STATEMENT] states)
  					  | stateStatement(str name, EXP exp)
+ 					  | recursiveVarStatement(str name, str var, EXP exp)
+ 					  | recursiveConstStatement(str name, int const, EXP exp)
+ 					  | contRecursiveVarStatement(str name, str var, EXP exp, EXP context)
+ 					  | contRecursiveConstStatement(str name, int const, EXP exp, EXP context)
  					  | initialStatement(STATEMENT state);
       
 anno loc PROGRAM@location;

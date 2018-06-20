@@ -4,7 +4,7 @@ process BOB {
 }
 
 process BOB2 {
-	initial state A := a.D;
-	state C := c.C;
-	state A := a.C;
+	initial state A := a.A;
+	state B(0) := a.A(1);
+	state B(n) := a.A(n) in natural;
 }
