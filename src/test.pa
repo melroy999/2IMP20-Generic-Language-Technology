@@ -1,0 +1,7 @@
+process BOB { 
+	initial state A := a.A;
+	state B := b.B;
+}
+process BOB2 {
+	initial state A := a.A;
+}

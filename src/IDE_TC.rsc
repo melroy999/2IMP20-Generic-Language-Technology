@@ -8,8 +8,6 @@ import vis::Figure;
 import vis::Render;
 
 import Syntax;
-import Abstract;
-import Typecheck;
 
 //  define the language name and extension
 
@@ -20,19 +18,6 @@ private str PA_EXT = "pa";
 Tree parser(str x, loc l) {
     return parse(#Program, x, l);
 }
-
-//  Define connection with the PA typechecker
-// (includes type checking and uninitialized variables check)
-
-public Program checkPAProgram(Program x) {
-	p = implode(#PROGRAM, x);
-	env = checkProgram(p);
-	errors = { error(v, l) | <loc l, PAId v> <- env.errors };
-	
-	return x[@messages = errors];
-    
-}
-
 
 public void registerPA() {
   registerLanguage(PA_NAME, PA_EXT, parser);
