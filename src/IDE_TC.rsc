@@ -22,11 +22,8 @@ Tree parser(str x, loc l) {
 }
 
 public Program checkPAProgram(Program x) {
-	//p = implode(#PROGRAM, x);
-	//env = checkProgram(p);
-	//errors = { error(v, l) | <loc l, Id v> <- env.errors };
-	
-	errors = {};
+	p = implode(#PROGRAM, x);
+	errors = { error(v, l) | <loc l, Id v> <- checkProgram(p) };
 	
 	return x[@messages = errors];
 }
