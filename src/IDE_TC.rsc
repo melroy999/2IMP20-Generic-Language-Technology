@@ -26,7 +26,7 @@ public Program checkPAProgram(Program x) {
 	p = implode(#PROGRAM, x);
 	errors = { error(v, l) | <loc l, Id v> <- checkProgram(p) };
 	
-    //code = compileProgram(p);
+ //   code = compileProgram(p);
 	//text(code);
 	
 	return x[@messages = errors];

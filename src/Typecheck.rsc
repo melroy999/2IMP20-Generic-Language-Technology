@@ -165,10 +165,10 @@ public tuple[str var, int offset] getRecursionVariable(exp:sub(str left, int con
 public ERR checkExpression(exp:state(str name), ERR errors, list[SYM] symbols, SYM symbol) {
 	// Check if the state is declared. Next to that, check whether the declared variable source is non-recursive.
 	if(name != "1" && name != "0") {
-		for(symbol <- symbols) {
-			if(symbol.Id == name) {
+		for(s <- symbols) {
+			if(s.Id == name) {
 				// We have a match, is it a non-recursive variable?
-				if(symbol.min != -1) {
+				if(s.min != -1) {
 					errors += <exp@location, "The state \'<name>\' is defined to be a recursive state, and should be accompanied by a recursive variable.">;
 				} 
 				return errors;

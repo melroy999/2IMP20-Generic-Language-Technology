@@ -8,7 +8,8 @@ process BOB {
 
 process BOB2 {
 	initial state A := a.a.a.a.A;
-	state C(0) := a.B(0);
+	state E := a.E;
+	state C(0) := a.B(0) + a.E;
 	state C(n) := a.B(n-1) in natural;
 	state B(0) := a.C(0);
 	state B(n) := a.C(n-1) in natural;
@@ -16,4 +17,10 @@ process BOB2 {
 
 process BOB3 {
 	initial state A := A;
+}
+
+process GEORGE {
+	initial state A := a.A;
+	state B := a.A;
+	state C := a.B;
 }

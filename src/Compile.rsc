@@ -25,7 +25,7 @@ set[NODE] getInitialStates(stat:contRecursiveVarStatement(str name, str var, EXP
 	tuple[int min, int max] range = getRange(context);
 	
 	if(min == -1) {
-		println("Sadly, natural ranges are not supported.");
+		println("Sadly, natural ranges are not supported. Skipping the variable.");
 		return states;
 	}
 	
