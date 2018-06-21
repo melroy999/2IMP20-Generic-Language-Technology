@@ -31,15 +31,14 @@ syntax Expression = state: (UpperCaseId | "1" | "0") name
 				  | transition: LowerCaseId name
 				  | recursion: UpperCaseId name "(" RecExpression exp ")"
 				  | bracket "(" Expression e ")"
-				  > left action: Expression lhs "." Expression rhs
+				  > left action: LowerCaseId lhs "." Expression rhs
 				  > left sequential: Expression lhs "*" Expression rhs
 				  > left choice: Expression lhs "+" Expression rhs;
 				  
 syntax RecExpression = id: LowerCaseId name
 					 | natCon: Natural natcon
-					 | bracket "(" RecExpression e ")"
-					 > left ( add: RecExpression lhs "+" RecExpression rhs
-					 		| sub: RecExpression lhs "-" RecExpression rhs
+					 > left ( add: RecExpression lhs "+" Natural rhs
+					 		| sub: RecExpression lhs "-" Natural rhs
 					 		);
 					 		
 syntax RangeExpression = rangeContext: "range" "(" Natural min "," Natural max ")"

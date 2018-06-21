@@ -12,6 +12,7 @@ alias ERR = list[tuple[loc l, str msg]];
 // A symbol is defined as a tuple, with the symbol id and a min and max range for recursion.
 // min = 1, max = -1 => natural number
 // min = -1, max = -1 => variable is not a recursion variable.
+// Here the name corresponds to the recursive variable name.
 alias SYM = tuple[Id Id, str name, int min, int max];
 
 // Alias for symbol locations.
@@ -74,14 +75,12 @@ public SYM_LOC getDeclaredSymbol(stat:contRecursiveConstStatement(str name, int 
 }
 
 // Fetch all symbols used in the statements, and report errors where neccessary.
-public tuple[list[SYM] symbols, map[STATEMENT, SYM] decs, ERR errors] getAndValidateSymbols(STATEMENT initialState, list[STATEMENT] states, ERR errors) {
+public tuple[list[SYM] symbols, ERR errors] getAndValidateSymbols(STATEMENT initialState, list[STATEMENT] states, ERR errors) {
 	// Start by finding all the declared symbols, since we allow state names to be used before declaration.
 	symbols = [];
-	map[STATEMENT, SYM] decs = ();
 	
 	for(state <- initialState + states) {
 		<symbol, location> = getDeclaredSymbol(state);
-		decs[state] = symbol;
 		
 		if(symbol.min == -2) {
 			// Invalid construct, error and skip.
@@ -139,7 +138,7 @@ public tuple[list[SYM] symbols, map[STATEMENT, SYM] decs, ERR errors] getAndVali
 		symbols += symbol;
 	}
 	
-	return <symbols, decs, errors>;
+	return <symbols, errors>;
 }
 
 
@@ -149,8 +148,8 @@ public tuple[list[SYM] symbols, map[STATEMENT, SYM] decs, ERR errors] getAndVali
 
 
 
-public ERR checkExpression(exp:state(str name), ERR errors, list[SYM] symbols, map[STATEMENT, SYM] decs) {
-	// Check if the state is declared. Next to that, check whether the variable source is non-recursive.
+public ERR checkExpression(exp:state(str name), ERR errors, list[SYM] symbols, SYM symbol) {
+	// Check if the state is declared. Next to that, check whether the declared variable source is non-recursive.
 	if(name != "1" && name != "0") {
 		for(symbol <- symbols) {
 			if(symbol.Id == name) {
@@ -168,7 +167,7 @@ public ERR checkExpression(exp:state(str name), ERR errors, list[SYM] symbols, m
 	return errors;
 }
 
-public ERR checkExpression(exp:recursion(str name, EXP exp), ERR errors, list[SYM] symbols, map[STATEMENT, SYM] decs) {
+public ERR checkExpression(exp:recursion(str name, EXP exp), ERR errors, list[SYM] symbols, SYM symbol) {
 	// Check if the name is declared, and whether the variable is compatible with the declaration.
 	compatibles = [];
 	for(symbol <- symbols) {
@@ -189,6 +188,11 @@ public ERR checkExpression(exp:recursion(str name, EXP exp), ERR errors, list[SY
 		errors += <exp@location, "The state \'<name>\' is defined to be a non-recursive state.">;
 	}
 	
+	// Is the recursive expression "simple"? i.e. does it adhere to the format 
+	
+	// Is the recursion variable used in the expression declared?
+	
+	
 	// Is the range associated with the expression present in the compatible variables?
 	// TODO What is the range declared by the context? We cannot determine the validity without it.
 	
@@ -199,51 +203,67 @@ public ERR checkExpression(exp:recursion(str name, EXP exp), ERR errors, list[SY
 	return errors;
 }
 
-public ERR checkExpression(exp:transition(str name), ERR errors, list[SYM] symbols, map[STATEMENT, SYM] decs) {
+public ERR checkExpression(exp:transition(str name), ERR errors, list[SYM] symbols, SYM symbol) {
 	// Trivially true.
 	return errors;
 }
 
-public ERR checkExpression(exp:action(EXP left, EXP right), ERR errors, list[SYM] symbols, map[STATEMENT, SYM] decs) {
+public ERR checkExpression(exp:action(str label, EXP right), ERR errors, list[SYM] symbols, SYM symbol) {
+	return checkExpression(right, errors, symbols, symbol);
+}
+
+public ERR checkExpression(exp:sequential(EXP left, EXP right), ERR errors, list[SYM] symbols, SYM symbol) {
+	return checkExpression(left, checkExpression(right, errors, symbols, symbol), symbols, symbol);
+}
+
+public ERR checkExpression(exp:choice(EXP left, EXP right), ERR errors, list[SYM] symbols, SYM symbol) {
+	return checkExpression(left, checkExpression(right, errors, symbols, symbol), symbols, symbol);
+}
+
+public ERR checkExpression(exp:action(EXP left, EXP right), ERR errors, list[SYM] symbols, SYM symbol) {
 	// TODO left HAS to yield a transition.
-	return checkExpression(left, checkExpression(right, errors, symbols, decs), symbols, decs);
+	return checkExpression(left, checkExpression(right, errors, symbols, symbol), symbols, symbol);
 }
 
-public ERR checkExpression(exp:sequential(EXP left, EXP right), ERR errors, list[SYM] symbols, map[STATEMENT, SYM] decs) {
-	return checkExpression(left, checkExpression(right, errors, symbols, decs), symbols, decs);
-}
-
-public ERR checkExpression(exp:choice(EXP left, EXP right), ERR errors, list[SYM] symbols, map[STATEMENT, SYM] decs) {
-	return checkExpression(left, checkExpression(right, errors, symbols, decs), symbols, decs);
-}
-
-public ERR checkStatement(stat:stateStatement(str name, EXP exp), ERR errors, list[SYM] symbols, map[STATEMENT, SYM] decs) {
-	return checkExpression(exp, errors, symbols, decs);	
-}
-
-public ERR checkStatement(stat:initialStatement(STATEMENT state), ERR errors, list[SYM] symbols, map[STATEMENT, SYM] decs) {
-	return checkStatement(state, errors, symbols, decs);
-}
-
-
-
-public ERR checkStatement(stat:recursiveVarStatement(str name, str var, EXP exp), ERR errors, list[SYM] symbols, map[STATEMENT, SYM] decs) {
-	// TODO.
+public ERR checkExpression(exp:id(str name), ERR errors, list[SYM] symbols, SYM symbol) {
 	return errors;
 }
 
-public ERR checkStatement(stat:recursiveConstStatement(str name, int const, EXP exp), ERR errors, list[SYM] symbols, map[STATEMENT, SYM] decs) {
-	// TODO.
+public ERR checkExpression(exp:natCon(int i), ERR errors, list[SYM] symbols, SYM symbol) {
 	return errors;
 }
 
-public ERR checkStatement(stat:contRecursiveVarStatement(str name, str var, EXP exp, EXP context), ERR errors, list[SYM] symbols, map[STATEMENT, SYM] decs) {
-	// TODO.
+public ERR checkExpression(exp:add(EXP left, int const), ERR errors, list[SYM] symbols, SYM symbol) {
 	return errors;
 }
 
-public ERR checkStatement(stat:contRecursiveConstStatement(str name, int const, EXP exp, EXP context), ERR errors, list[SYM] symbols, map[STATEMENT, SYM] decs) {
-	// TODO.
+public ERR checkExpression(exp:sub(EXP left, int const), ERR errors, list[SYM] symbols, SYM symbol) {
+	return errors;
+}
+
+
+public ERR checkStatement(stat:initialStatement(STATEMENT state), ERR errors, list[SYM] symbols, SYM symbol) {
+	return checkStatement(state, errors, symbols, symbol);
+}
+
+public ERR checkStatement(stat:stateStatement(str name, EXP exp), ERR errors, list[SYM] symbols, SYM symbol) {
+	return checkExpression(exp, errors, symbols, symbol);	
+}
+
+public ERR checkStatement(stat:recursiveConstStatement(str name, int const, EXP exp), ERR errors, list[SYM] symbols, SYM symbol) {
+	return checkExpression(exp, errors, symbols, symbol);
+}
+
+public ERR checkStatement(stat:contRecursiveVarStatement(str name, str var, EXP exp, EXP context), ERR errors, list[SYM] symbols, SYM symbol) {
+	return checkExpression(exp, errors, symbols, symbol);
+}
+
+public ERR checkStatement(stat:contRecursiveConstStatement(str name, int const, EXP exp, EXP context), ERR errors, list[SYM] symbols, SYM symbol) {
+	return checkExpression(exp, errors, symbols, symbol);
+}
+
+public ERR checkStatement(stat:recursiveVarStatement(str name, str var, EXP exp), ERR errors, list[SYM] symbols, SYM symbol) {
+	// This case has already been marked as an error beforehand, since the recursion variable is undefined. Return.
 	return errors;
 }
 
@@ -267,12 +287,13 @@ public tuple[ERR errors, list[str] names] checkStatement(stat:processStatement(s
 	}
 
 	// Fetch and validate the symbols.
-	<symbols, decs, errors> = getAndValidateSymbols(initialState, states, errors);
+	<symbols, errors> = getAndValidateSymbols(initialState, states, errors);
 	
 	// Start checking the states and consequently, the expressions.
-	errors = checkStatement(initialState, errors, symbols, decs);
-	for(state <- states) {
-		errors = checkStatement(state, errors, symbols, decs);
+	for(state <- initialState + states) {
+		// Before calling check statement, we have to find the symbol again for cross verification.
+		SYM_LOC = getDeclaredSymbol(state);
+		errors = checkStatement(state, errors, symbols, SYM_LOC.symbol);
 	}
 	
 	return <errors, pNames>;
