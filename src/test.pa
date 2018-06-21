@@ -13,3 +13,7 @@ process BOB2 {
 	state B(0) := a.C(0);
 	state B(n) := a.C(n-1) in natural;
 }
+
+process BOB3 {
+	initial state A := A;
+}
