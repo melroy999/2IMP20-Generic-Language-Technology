@@ -143,8 +143,11 @@ public tuple[list[SYM] symbols, ERR errors] getAndValidateSymbols(STATEMENT init
 	return <symbols, errors>;
 }
 
-
-
+// =========================================================================================
+//
+// Validating statements and expressions.
+//
+// =========================================================================================
 
 public tuple[str var, int offset] getRecursionVariable(exp:id(str name)) {
 	return <name, 0>;
@@ -317,17 +320,8 @@ public ERR checkExpression(exp:recursion(str name, EXP var), ERR errors, list[SY
 	return errors;
 }
 
-public ERR checkExpression(exp:transition(str name), ERR errors, list[SYM] symbols, SYM symbol) {
-	// This expression is simple, and has no errors.
-	return errors;
-}
-
 public ERR checkExpression(exp:action(str label, EXP right), ERR errors, list[SYM] symbols, SYM symbol) {
 	return checkExpression(right, errors, symbols, symbol);
-}
-
-public ERR checkExpression(exp:sequential(EXP left, EXP right), ERR errors, list[SYM] symbols, SYM symbol) {
-	return checkExpression(left, checkExpression(right, errors, symbols, symbol), symbols, symbol);
 }
 
 public ERR checkExpression(exp:choice(EXP left, EXP right), ERR errors, list[SYM] symbols, SYM symbol) {
@@ -371,7 +365,6 @@ public ERR checkExpression(exp:naturalContext(), ERR errors, list[SYM] symbols, 
 	return errors;
 }
 
-
 public ERR checkStatement(stat:initialStatement(STATEMENT state), ERR errors, list[SYM] symbols, SYM symbol) {
 	return checkStatement(state, errors, symbols, symbol);
 }
@@ -403,13 +396,6 @@ public ERR checkStatement(stat:recursiveVarStatement(str name, str var, EXP exp)
 	return errors;
 }
 
-
-
-
-
-
-
-
 /*
  * Since the scope of the symbols is local, we should look for symbols and errors in succession.
  */
@@ -428,8 +414,8 @@ public tuple[ERR errors, list[str] names] checkStatement(stat:processStatement(s
 	// Start checking the states and consequently, the expressions.
 	for(state <- initialState + states) {
 		// Before calling check statement, we have to find the symbol again for cross verification.
-		SYM_LOC = getDeclaredSymbol(state);
-		errors = checkStatement(state, errors, symbols, SYM_LOC.symbol);
+		s = getDeclaredSymbol(state).symbol;
+		errors = checkStatement(state, errors, symbols, s);
 	}
 	
 	return <errors, pNames>;

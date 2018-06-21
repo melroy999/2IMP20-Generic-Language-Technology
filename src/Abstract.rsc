@@ -7,7 +7,6 @@ public data PROGRAM = program(list[STATEMENT] stats);
 public data EXP = state(str name)
  				| recursion(str name, EXP exp)
 			    | action(str label, EXP right)
-			    | sequential(EXP left, EXP right)
 			    | choice(EXP left, EXP right)
 			    | id(str name)
 			    | natCon(int i)

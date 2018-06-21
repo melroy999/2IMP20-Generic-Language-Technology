@@ -31,7 +31,6 @@ syntax Expression = state: (UpperCaseId | "1" | "0") name
 				  | recursion: UpperCaseId name "(" RecExpression exp ")"
 				  | bracket "(" Expression e ")"
 				  > left action: LowerCaseId lhs "." Expression rhs
-				  > left sequential: Expression lhs "*" Expression rhs
 				  > left choice: Expression lhs "+" Expression rhs;
 				  
 syntax RecExpression = id: LowerCaseId name
