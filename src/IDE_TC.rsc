@@ -10,6 +10,7 @@ import vis::Render;
 import Syntax;
 import Abstract;
 import Typecheck;
+import Compile;
 
 //  define the language name and extension
 
@@ -28,7 +29,22 @@ public Program checkPAProgram(Program x) {
 	return x[@messages = errors];
 }
 
+public void compilePAProgram(Program x, loc l){      
+    p = implode(#PROGRAM, x);
+    code = compileProgram(p);
+	text(code);
+}
+
+public set[Contribution] PA_CONTRIBS = {
+	popup(
+		menu("Process Algebra",[
+    		action("Compile processes to latex", compilePAProgram)
+	    ])
+  	)
+};
+
 public void registerPA() {
   registerLanguage(PA_NAME, PA_EXT, parser);
   registerAnnotator(PA_NAME, checkPAProgram);
+  registerContributions(PA_NAME, PA_CONTRIBS);
 }
