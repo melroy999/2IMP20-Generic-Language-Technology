@@ -145,6 +145,84 @@ public tuple[list[SYM] symbols, ERR errors] getAndValidateSymbols(STATEMENT init
 
 // =========================================================================================
 //
+// Check whether the given expression is guarded.
+//
+// =========================================================================================
+
+public list[bool] isGuarded(exp:state(str name)) {
+	return [false];
+}
+
+public list[bool] isGuarded(exp:recursion(str name, EXP var)) {
+	return [false];
+}
+
+public list[bool] isGuarded(exp:action(str label, EXP var)) {
+	return [true | b <- isGuarded(var)];
+}
+
+public list[bool] isGuarded(exp:choice(EXP left, EXP right)) {
+	return isGuarded(left) + isGuarded(right);
+}
+
+// =========================================================================================
+//
+// Checks to find otiose range statements.
+//
+// =========================================================================================
+
+public bool isRangeRequired(exp:state(str name)) {
+	return false;
+}
+
+public bool isRangeRequired(exp:recursion(str name, EXP var)) {
+	<varId, offset> = getRecursionVariable(var);
+	
+	try {
+		toInt(varId);
+		return false;
+	} catch IllegalArgument: {
+		// It is a string, so a recursion variable is used.
+		return true;
+	}
+}
+
+public bool isRangeRequired(exp:action(str label, EXP var)) {
+	return isRangeRequired(var);
+}
+
+public bool isRangeRequired(exp:choice(EXP left, EXP right)) {
+	return isRangeRequired(left) || isRangeRequired(right);
+}
+
+// =========================================================================================
+//
+// Checks in which the initial state is checked for simplicity.
+//
+// =========================================================================================
+
+public bool isStateSimple(stat:stateStatement(str name, EXP exp)) {
+	return true;
+}
+
+public bool isStateSimple(stat:recursiveVarStatement(str name, str var, EXP exp)) {
+	return false;
+}
+
+public bool isStateSimple(stat:recursiveConstStatement(str name, int const, EXP exp)) {
+	return true;
+}
+
+public bool isStateSimple(stat:contRecursiveVarStatement(str name, str var, EXP exp, EXP context)) {
+	return false;
+}
+
+public bool isStateSimple(stat:contRecursiveConstStatement(str name, int const, EXP exp, EXP context)) {
+	return true;
+}
+
+// =========================================================================================
+//
 // Validating statements and expressions.
 //
 // =========================================================================================
@@ -366,18 +444,43 @@ public ERR checkExpression(exp:naturalContext(), ERR errors, list[SYM] symbols, 
 }
 
 public ERR checkStatement(stat:initialStatement(STATEMENT state), ERR errors, list[SYM] symbols, SYM symbol) {
+	if(!isStateSimple(state), b) {
+		errors += <stat@location, "The initial state is not allowed to have the in keyword.">;
+		return errors;
+	}
+
 	return checkStatement(state, errors, symbols, symbol);
 }
 
 public ERR checkStatement(stat:stateStatement(str name, EXP exp), ERR errors, list[SYM] symbols, SYM symbol) {
+	// Is the expression guarded?
+	if(!all(b <- isGuarded(exp), b)) {
+		errors += <exp@location, "The expression is unguarded.">;
+	}
+	
 	return checkExpression(exp, errors, symbols, symbol);	
 }
 
 public ERR checkStatement(stat:recursiveConstStatement(str name, int const, EXP exp), ERR errors, list[SYM] symbols, SYM symbol) {
+	// Is the expression guarded?
+	if(!all(b <- isGuarded(exp), b)) {
+		errors += <exp@location, "The expression is unguarded.">;
+	}
+	
 	return checkExpression(exp, errors, symbols, symbol);
 }
 
 public ERR checkStatement(stat:contRecursiveVarStatement(str name, str var, EXP exp, EXP context), ERR errors, list[SYM] symbols, SYM symbol) {
+	// Is the range check superfluous?
+	if(!isRangeRequired(exp)) {
+		errors += <context@location, "The range definition is superfluous.">;
+	}
+	
+	// Is the expression guarded?
+	if(!all(b <- isGuarded(exp), b)) {
+		errors += <exp@location, "The expression is unguarded.">;
+	}
+	
 	// Is the defined context valid? I.e. is min <= max?
 	errors = checkExpression(context, errors, symbols, symbol);
 
@@ -385,6 +488,16 @@ public ERR checkStatement(stat:contRecursiveVarStatement(str name, str var, EXP 
 }
 
 public ERR checkStatement(stat:contRecursiveConstStatement(str name, int const, EXP exp, EXP context), ERR errors, list[SYM] symbols, SYM symbol) {
+	// Is the range check superfluous?
+	if(!isRangeRequired(exp)) {
+		errors += <context@location, "The range definition is superfluous.">;
+	}
+	
+	// Is the expression guarded?
+	if(!all(b <- isGuarded(exp), b)) {
+		errors += <exp@location, "The expression is unguarded.">;
+	}
+	
 	// Is the defined context valid? I.e. is min <= max?
 	errors = checkExpression(context, errors, symbols, symbol);
 	

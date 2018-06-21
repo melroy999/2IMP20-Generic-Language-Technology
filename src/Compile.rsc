@@ -28,22 +28,6 @@ set[NODE] getInitialStates(stat:recursiveConstStatement(str name, int const, EXP
 	return states + <name, true, const>;
 }
 
-set[NODE] getInitialStates(stat:contRecursiveVarStatement(str name, str var, EXP exp, EXP context), set[NODE] states) {
-	// This state will have multiple options, depending on the range.
-	tuple[int min, int max] range = getRange(context);
-	
-	if(min == -1) {
-		println("Sadly, natural ranges are not supported. Skipping the variable.");
-		return states;
-	}
-	
-	return states + {<name, true, i> | i <- [range.min .. range.max + 1]};
-}
-
-set[NODE] getInitialStates(stat:contRecursiveConstStatement(str name, int const, EXP exp, EXP context), set[NODE] states) {
-	return states + <name, true, const>;
-}
-
 // =========================================================================================
 //
 // Building blocks for different types of states and edges.
@@ -163,6 +147,11 @@ DATA getGraphStructure(stat:contRecursiveVarStatement(str name, str var, EXP exp
 	// Is the given variable in range?
 	tuple[int min, int max] range = getRange(context);
 	
+	if(min == -1) {
+		println("Sadly, natural ranges are not supported. Skipping the variable.");
+		return states;
+	}
+	
 	if(name == target.id && range.min <= target.n && target.n <= range.max) {
 		// The statement matches the proposed variable, explore!
 		GRAPH result = getGraphStructure(exp, target.n, target);
@@ -178,6 +167,11 @@ DATA getGraphStructure(stat:contRecursiveVarStatement(str name, str var, EXP exp
 DATA getGraphStructure(stat:contRecursiveConstStatement(str name, int const, EXP exp, EXP context), DATA g, NODE target) {
 	// This state will have multiple options, depending on the range.
 	tuple[int min, int max] range = getRange(context);
+	
+	if(min == -1) {
+		println("Sadly, natural ranges are not supported. Skipping the variable.");
+		return states;
+	}
 	
 	if(name == target.id && const == target.n) {
 		for(i <- [min .. max + 1]) {
