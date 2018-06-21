@@ -86,7 +86,7 @@ public tuple[list[SYM] symbols, ERR errors] getAndValidateSymbols(STATEMENT init
 		
 		if(symbol.min == -2) {
 			// Invalid construct, error and skip.
-			errors += <location, "The recursion variable \'<symbol.Id>\' is undefined (a in operator with a range is required).">;
+			errors += <location, "The recursion variable \'<symbol.Id>\' is undefined, an in operator with a range is required.">;
 			continue;
 		}
 		
@@ -235,7 +235,7 @@ public ERR checkExpression(exp:recursion(str name, EXP var), ERR errors, list[SY
 		}
 		
 		if(!isDeclared) {
-			errors += <exp@location, "The given recursive state \'<name>\' is undefined for recursive variable \'<varId>\'.">;
+			errors += <exp@location, "The given recursive state \'<name>\'(n) is undefined for recursive variable \'<varId>\'.">;
 		}
 	} catch IllegalArgument: {
 		// The variable is not an int, since we had an error.
@@ -251,16 +251,74 @@ public ERR checkExpression(exp:recursion(str name, EXP var), ERR errors, list[SY
 			return errors;
 		}
 		
-		// Is the range of the recursion variable declared? 
-		
-		
+		// Is the range of the recursion variable declared? We have two cases: the range is natural or defined:
+		if(symbol.rmax == -1) {
+			// The range is natural, base the decision on the offset.
+			if(offset < -1) {
+				errors += <exp@location, "The recursive variable \'<varId>\'(n) is not allowed to be negative.">;
+				return errors;
+			} else {
+				// Any natural range is valid.
+				if(!any(c <- compatibles, c.max == -1)) {
+					errors += <exp@location, "The recursive state \'<name>\'(n) requires a recursion variable with natural range.">;
+				}
+				
+				// For offset -1, we require the state with recursive variable 0 to also be defined.
+				if(offset == -1) {
+					if(!any(c <- compatibles, c.min == 0)) {
+						errors += <exp@location, "The recursive state \'<name>\'(n) is undefined for \'<name>\'(0).">;
+					}
+				}
+			}
+		} else {
+			// The range is defined. We have to check whether the entire range is covered.
+			range_min = symbol.rmin + offset;
+			range_max = symbol.rmax + offset;
+			
+			// We do not allow negative recursion variables.
+			if(range_min < 0) {
+				errors += <exp@location, "The recursive variable \'<varId>\'(n) is not allowed to be negative.">;
+				return errors;
+			}
+			
+			// Is the entire range covered by the compatible variables?
+			if(any(c <- compatibles, c.max == -1)) {
+				if(range_min > 0) {
+					// Yes, there is a natural variable covering the entire thing.
+					return errors;
+				} else {
+					// If 0 is covered, we are good.
+					if(any(c <- compatibles, c.min == 0)) {
+						return errors;
+					}
+				}
+			}
+			
+			// We have no natural ranges, so we get to puzzle. Sort the compatibles on min, and check if the entire range is covered.
+			sortedCompatibles = sort(compatibles, bool (SYM a, SYM b) { return a.min < b.min; });
+			
+			for(c <- sortedCompatibles) {
+				if(c.min <= range_min && range_min <= c.max) {
+					// We have covered at least up to max of this symbol, so increment.
+					range_min = c.max + 1;
+				}
+			}
+			
+			// If range_max < range_min, we have, by above, covered all options.
+			if(range_max < range_min) {
+				return errors;
+			}
+			
+			// Otherwise, we do not cover the entire range.
+			errors += <exp@location, "The recursive state \'<name>\'(n) is undefined for \'<name>\'(<range_min>).">;
+		}
 	}
 	
 	return errors;
 }
 
 public ERR checkExpression(exp:transition(str name), ERR errors, list[SYM] symbols, SYM symbol) {
-	// Trivially true.
+	// This expression is simple, and has no errors.
 	return errors;
 }
 
@@ -277,23 +335,26 @@ public ERR checkExpression(exp:choice(EXP left, EXP right), ERR errors, list[SYM
 }
 
 public ERR checkExpression(exp:action(EXP left, EXP right), ERR errors, list[SYM] symbols, SYM symbol) {
-	// TODO left HAS to yield a transition.
 	return checkExpression(left, checkExpression(right, errors, symbols, symbol), symbols, symbol);
 }
 
 public ERR checkExpression(exp:id(str name), ERR errors, list[SYM] symbols, SYM symbol) {
+	// This expression is simple, and has no errors.
 	return errors;
 }
 
 public ERR checkExpression(exp:natCon(int i), ERR errors, list[SYM] symbols, SYM symbol) {
+	// This expression is simple, and has no errors.
 	return errors;
 }
 
 public ERR checkExpression(exp:add(str left, int const), ERR errors, list[SYM] symbols, SYM symbol) {
+	// This expression is simple, and has no errors.
 	return errors;
 }
 
 public ERR checkExpression(exp:sub(str left, int const), ERR errors, list[SYM] symbols, SYM symbol) {
+	// This expression is simple, and has no errors.
 	return errors;
 }
 
@@ -306,6 +367,7 @@ public ERR checkExpression(exp:rangeContext(int min, int max), ERR errors, list[
 }
 
 public ERR checkExpression(exp:naturalContext(), ERR errors, list[SYM] symbols, SYM symbol) {
+	// This expression is simple, and has no errors.
 	return errors;
 }
 
