@@ -37,8 +37,8 @@ syntax Expression = state: (UpperCaseId | "1" | "0") name
 				  
 syntax RecExpression = id: LowerCaseId name
 					 | natCon: Natural natcon
-					 > left ( add: RecExpression lhs "+" Natural rhs
-					 		| sub: RecExpression lhs "-" Natural rhs
+					 > left ( add: LowerCaseId lhs "+" Natural rhs
+					 		| sub: LowerCaseId lhs "-" Natural rhs
 					 		);
 					 		
 syntax RangeExpression = rangeContext: "range" "(" Natural min "," Natural max ")"

@@ -4,7 +4,8 @@ process BOB {
 }
 
 process BOB2 {
-	initial state A := a.A;
-	state B(0) := a.A(1);
-	state B(n) := a.A(n) in natural;
+	initial state A := a.a.a.a.A;
+	state C(1) := a.B(1);
+	state B(0) := a.B(1);
+	state B(n) := a.B(n-2) in natural;
 }

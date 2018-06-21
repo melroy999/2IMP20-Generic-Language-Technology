@@ -13,7 +13,8 @@ alias ERR = list[tuple[loc l, str msg]];
 // min = 1, max = -1 => natural number
 // min = -1, max = -1 => variable is not a recursion variable.
 // Here the name corresponds to the recursive variable name.
-alias SYM = tuple[Id Id, str name, int min, int max];
+// rmin and rmax correspond to the range as defined by the context. Both will be -1 if undefined.
+alias SYM = tuple[Id Id, str name, int min, int max, int rmin, int rmax];
 
 // Alias for symbol locations.
 alias SYM_LOC = tuple[SYM symbol, loc location];
@@ -45,33 +46,34 @@ public SYM_LOC getDeclaredSymbol(stat:initialStatement(STATEMENT state)) {
 // Get the symbol declared by the statement, with recursive bounds if possible.
 public SYM_LOC getDeclaredSymbol(stat:stateStatement(str name, EXP exp)) {
 	// With the pair -1, -1 we denote that the variable takes the full range.
-	return <<name, "", -1, -1>, stat@location>;
+	return <<name, "", -1, -1, -1, -1>, stat@location>;
 }
 
 // Get the symbol declared by the statement, with recursive bounds if possible.
 public SYM_LOC getDeclaredSymbol(stat:recursiveVarStatement(str name, str var, EXP exp)) {
 	// This case should never occur, as the variable is unbounded!
 	// Use special code -2.
-	return <<name, var, -2, -2>, stat@location>;
+	return <<name, var, -2, -2, -1, -1>, stat@location>;
 }
 
 // Get the symbol declared by the statement, with recursive bounds if possible.
 public SYM_LOC getDeclaredSymbol(stat:recursiveConstStatement(str name, int const, EXP exp)) {
 	// The symbol is recursive, with the variable of this instance being declared as a constant.
-	return <<name, "<const>", const, const>, stat@location>;
+	return <<name, "<const>", const, const, -1, -1>, stat@location>;
 }
 
 // Get the symbol declared by the statement, with recursive bounds if possible.
 public SYM_LOC getDeclaredSymbol(stat:contRecursiveVarStatement(str name, str var, EXP exp, EXP context)) {
 	// Find the range.
 	tuple[int min, int max] range = getRange(context);
-	return <<name, var, range.min, range.max>, stat@location>;
+	return <<name, var, range.min, range.max, range.min, range.max>, stat@location>;
 }
 
 // Get the symbol declared by the statement, with recursive bounds if possible.
 public SYM_LOC getDeclaredSymbol(stat:contRecursiveConstStatement(str name, int const, EXP exp, EXP context)) {
 	// The context does not matter here, as only const is declared.
-	return <<name, "<const>", const, const>, stat@location>;
+	tuple[int min, int max] range = getRange(context);
+	return <<name, "<const>", const, const, range.min, range.max>, stat@location>;
 }
 
 // Fetch all symbols used in the statements, and report errors where neccessary.
@@ -144,9 +146,21 @@ public tuple[list[SYM] symbols, ERR errors] getAndValidateSymbols(STATEMENT init
 
 
 
+public tuple[str var, int offset] getRecursionVariable(exp:id(str name)) {
+	return <name, 0>;
+}
 
+public tuple[str var, int offset] getRecursionVariable(exp:natCon(int i)) {
+	return <"<i>", 0>;
+}
 
+public tuple[str var, int offset] getRecursionVariable(exp:add(str left, int const)) {
+	return <left, const>;
+}
 
+public tuple[str var, int offset] getRecursionVariable(exp:sub(str left, int const)) {
+	return <left, -const>;
+}
 
 public ERR checkExpression(exp:state(str name), ERR errors, list[SYM] symbols, SYM symbol) {
 	// Check if the state is declared. Next to that, check whether the declared variable source is non-recursive.
@@ -167,12 +181,12 @@ public ERR checkExpression(exp:state(str name), ERR errors, list[SYM] symbols, S
 	return errors;
 }
 
-public ERR checkExpression(exp:recursion(str name, EXP exp), ERR errors, list[SYM] symbols, SYM symbol) {
+public ERR checkExpression(exp:recursion(str name, EXP var), ERR errors, list[SYM] symbols, SYM symbol) {
 	// Check if the name is declared, and whether the variable is compatible with the declaration.
 	compatibles = [];
-	for(symbol <- symbols) {
-		if(symbol.Id == name) {
-			compatibles += symbol;
+	for(s <- symbols) {
+		if(s.Id == name) {
+			compatibles += s;
 		}
 	}
 	
@@ -183,23 +197,65 @@ public ERR checkExpression(exp:recursion(str name, EXP exp), ERR errors, list[SY
 	}
 	
 	// Are the given variables compatible?
-	if(any([c.min == -1 | c <- compatibles])) {
+	if(any(c <- compatibles, c.min == -1)) {
 		// We have a non-recursive variable as an option.
 		errors += <exp@location, "The state \'<name>\' is defined to be a non-recursive state.">;
+		return errors;
 	}
 	
-	// Is the recursive expression "simple"? i.e. does it adhere to the format 
+	// Given the expression, should a context be given?
+	<varId, offset> = getRecursionVariable(var);
+	try {
+		// We expect here to receive an constant integer recursion variable.
+		int varValue = toInt(varId);
+		
+		// Is the state connected to the integer recursion variable declared?
+		bool isDeclared = false;
+		for(c <- compatibles) {
+			// What kind of recursive variable are we looking at?
+			if(c.max == -1) {
+				// natural number, starting at 1. So report error if varValue is 0.
+				if(varValue != 0) {
+					isDeclared = true;
+					break;
+				}
+			} else if(c.min == c.max) {
+				// constant.
+				if(varValue == c.min) {
+					isDeclared = true;
+					break;
+				}
+			} else {
+				// It must be a range.
+				if(c.min <= varValue && varValue <= c.max) {
+					isDeclared = true;
+					break;
+				}
+			}
+		}
+		
+		if(!isDeclared) {
+			errors += <exp@location, "The given recursive state \'<name>\' is undefined for recursive variable \'<varId>\'.">;
+		}
+	} catch IllegalArgument: {
+		// The variable is not an int, since we had an error.
+		if(symbol.rmin == -1) {
+			// The recursion variable is undeclared, throw an error.
+			errors += <exp@location, "The recursion variable \'<varId>\' requires a context.">;
+			return errors;
+		}
+		
+		// Is the recursion variable used in the expression declared?
+		if(varId != symbol.name) {
+			errors += <exp@location, "The recursion variable \'<varId>\' is undeclared (it should instead use the variable \'<symbol.name>\').">;
+			return errors;
+		}
+		
+		// Is the range of the recursion variable declared? 
+		
+		
+	}
 	
-	// Is the recursion variable used in the expression declared?
-	
-	
-	// Is the range associated with the expression present in the compatible variables?
-	// TODO What is the range declared by the context? We cannot determine the validity without it.
-	
-
-	// TODO.
-	// Check whether state is declared.
-	// Other stuff?
 	return errors;
 }
 
@@ -233,11 +289,23 @@ public ERR checkExpression(exp:natCon(int i), ERR errors, list[SYM] symbols, SYM
 	return errors;
 }
 
-public ERR checkExpression(exp:add(EXP left, int const), ERR errors, list[SYM] symbols, SYM symbol) {
+public ERR checkExpression(exp:add(str left, int const), ERR errors, list[SYM] symbols, SYM symbol) {
 	return errors;
 }
 
-public ERR checkExpression(exp:sub(EXP left, int const), ERR errors, list[SYM] symbols, SYM symbol) {
+public ERR checkExpression(exp:sub(str left, int const), ERR errors, list[SYM] symbols, SYM symbol) {
+	return errors;
+}
+
+public ERR checkExpression(exp:rangeContext(int min, int max), ERR errors, list[SYM] symbols, SYM symbol) {
+	if(max < min) {
+		errors += <exp@location, "The given range is empty.">;
+	}
+
+	return errors;
+}
+
+public ERR checkExpression(exp:naturalContext(), ERR errors, list[SYM] symbols, SYM symbol) {
 	return errors;
 }
 
@@ -255,10 +323,16 @@ public ERR checkStatement(stat:recursiveConstStatement(str name, int const, EXP 
 }
 
 public ERR checkStatement(stat:contRecursiveVarStatement(str name, str var, EXP exp, EXP context), ERR errors, list[SYM] symbols, SYM symbol) {
+	// Is the defined context valid? I.e. is min <= max?
+	errors = checkExpression(context, errors, symbols, symbol);
+
 	return checkExpression(exp, errors, symbols, symbol);
 }
 
 public ERR checkStatement(stat:contRecursiveConstStatement(str name, int const, EXP exp, EXP context), ERR errors, list[SYM] symbols, SYM symbol) {
+	// Is the defined context valid? I.e. is min <= max?
+	errors = checkExpression(context, errors, symbols, symbol);
+	
 	return checkExpression(exp, errors, symbols, symbol);
 }
 

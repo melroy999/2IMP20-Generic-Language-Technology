@@ -12,8 +12,9 @@ public data EXP = state(str name)
 			    | choice(EXP left, EXP right)
 			    | id(str name)
 			    | natCon(int i)
-			    | add(EXP left, int const)
-			    | sub(EXP left, int const)
+			    // Somehow we have to use var2 here, since otherwise we get lexical errors.
+			    | add(str var2, int const)
+			    | sub(str var, int const)
 			    | rangeContext(int min, int max)
 			    | naturalContext()
 			    ;
