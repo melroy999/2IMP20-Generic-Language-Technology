@@ -8,7 +8,7 @@ import Load;
 alias NODE = tuple[str id, bool isRec, int n];
 alias EDGE = tuple[NODE from, NODE to, str label];
 alias GRAPH = tuple[set[NODE] nodes, set[EDGE] edges];
-alias DATA = tuple[set[NODE] unvisited, set[NODE] visited, set[EDGE] edges];
+alias DATA = tuple[set[NODE] unvisited, set[NODE] visited, set[NODE] finalStates, set[EDGE] edges];
 
 // =========================================================================================
 //
@@ -54,11 +54,35 @@ str drawEdge(EDGE e, map[str, int] indents) {
 }
 
 str drawInitialEdge(NODE n, map[str, int] indents) {
-	return "\\draw[-\>] (<indents[n.id]>, <3 * n.n - 1>) -- (<n.id><n.n>) node[midway] {};";
+	return "\\draw[-\>] (<indents[n.id] - 1>, <3 * n.n - 1>) -- (<n.id><n.n>) node[midway] {};";
 }
 
 str drawFinalEdge(NODE n, map[str, int] indents) {
-	return "\\draw[-\>] (<n.id><n.n>) -- (<indents[n.id]>, <3 * n.n - 1>) node[midway] {};";
+	return "\\draw[-\>] (<n.id><n.n>) -- (<indents[n.id] + 1>, <3 * n.n - 1>) node[midway] {};";
+}
+
+
+// =========================================================================================
+//
+// Check whether the given state is a final state. I.e. is there an unguarded 1.
+//
+// =========================================================================================
+
+public list[bool] hasUnguardedFS(exp:state(str name)) {
+	// Note that 1 and 0 are always guarded.
+	return name == "1" ? [true] : [false];
+}
+
+public list[bool] hasUnguardedFS(exp:recursion(str name, EXP var)) {
+	return [false];
+}
+
+public list[bool] hasUnguardedFS(exp:action(str label, EXP var)) {
+	return [false | b <- hasUnguardedFS(var)];
+}
+
+public list[bool] hasUnguardedFS(exp:choice(EXP left, EXP right)) {
+	return hasUnguardedFS(left) + hasUnguardedFS(right);
 }
 
 // =========================================================================================
@@ -124,7 +148,8 @@ DATA getGraphStructure(stat:stateStatement(str name, EXP exp), DATA g, NODE targ
 		
 		// Which states are new?
 		set[NODE] discovered = result.nodes - g.visited;
-		g = <g.unvisited + discovered, g.visited, g.edges + result.edges>;
+		set[NODE] finalStates = g.finalStates + (any(b <- hasUnguardedFS(exp), b) ? target : {});
+		g = <g.unvisited + discovered, g.visited, finalStates, g.edges + result.edges>;
 	}
 
 	return g;
@@ -137,7 +162,8 @@ DATA getGraphStructure(stat:recursiveConstStatement(str name, int const, EXP exp
 		
 		// Which states are new?
 		set[NODE] discovered = result.nodes - g.visited;
-		g = <g.unvisited + discovered, g.visited, g.edges + result.edges>;
+		set[NODE] finalStates = g.finalStates + (any(b <- hasUnguardedFS(exp), b) ? target : {});
+		g = <g.unvisited + discovered, g.visited, finalStates, g.edges + result.edges>;
 	}
 	
 	return g;
@@ -158,7 +184,8 @@ DATA getGraphStructure(stat:contRecursiveVarStatement(str name, str var, EXP exp
 		
 		// Which states are new?
 		set[NODE] discovered = result.nodes - g.visited;
-		g = <g.unvisited + discovered, g.visited, g.edges + result.edges>;
+		set[NODE] finalStates = g.finalStates + (any(b <- hasUnguardedFS(exp), b) ? target : {});
+		g = <g.unvisited + discovered, g.visited, finalStates, g.edges + result.edges>;
 	}
 	
 	return g;
@@ -180,7 +207,8 @@ DATA getGraphStructure(stat:contRecursiveConstStatement(str name, int const, EXP
 			
 			// Which states are new?
 			set[NODE] discovered = result.nodes - g.visited;
-			g = <g.unvisited + discovered, g.visited, g.edges + result.edges>;
+		set[NODE] finalStates = g.finalStates + (any(b <- hasUnguardedFS(exp), b) ? target : {});
+			g = <g.unvisited + discovered, g.visited, finalStates, g.edges + result.edges>;
 		}
 	}
 	
@@ -193,6 +221,7 @@ str compileStat(stat:processStatement(str name, STATEMENT initialState, list[STA
 	initialStates = getInitialStates(initialState, {});
 	unvisitedStates = {} + initialStates;
 	visitedStates = {};
+	finalStates = {};
 	
 	// Now, find new states, as long as we find states that have not yet been visited.
 	// Also keep track of transitions that are found.
@@ -205,18 +234,29 @@ str compileStat(stat:processStatement(str name, STATEMENT initialState, list[STA
 		// Look for unvisited states, and transitions that lead there.
 		for(state <- initialState + states) {
 			// Check for new states and transitions.
-			<unvisitedStates, visitedStates, edges> = getGraphStructure(state, <unvisitedStates, visitedStates, edges>, target);
+			<unvisitedStates, visitedStates, finalStates, edges> = getGraphStructure(state, <unvisitedStates, visitedStates, finalStates, edges>, target);
 		}
 	}
 	
-	// What is the final state, if it exists?
-	finalStates = {s | s <- visitedStates, s.id == "1"};
+	// If there is no edge to the state 0, the state 0 should be eliminated.
+	if(!any(e <- edges, e.to.id == "0")) {
+		visitedStates -= <"0", false, 0>;
+	}
+	
+	// If there is no edge to the state 1, the state 1 should be eliminated.
+	if(!any(e <- edges, e.to.id == "1")) {
+		visitedStates -= <"1", false, 0>;
+	}
 	
 	// Get some "theoretical" positions for the states.
 	set[str] baseStates = {s.id | s <- visitedStates, s.id != "0" && s.id != "1"};
 	
 	// Sort the states on alphabetical order, with 0 and 1 having a minimum and maximum override.
-	list[str] baseStatesList = ["0"] + sort(baseStates) + (isEmpty(finalStates) ? [] : ["1"]);
+	list[str] baseStatesList = (any(s <- visitedStates, s.id == "0") ? ["0"] : []) + sort(baseStates) + (any(s <- visitedStates, s.id == "1") ? ["1"] : []);
+	
+	if(any(s <- visitedStates, s.id == "1")) {
+		finalStates += <"1", false, 0>;
+	}
 	
 	visitedStatesList = sort(visitedStates); 
 	edgesList = sort(edges); 

@@ -150,7 +150,8 @@ public tuple[list[SYM] symbols, ERR errors] getAndValidateSymbols(STATEMENT init
 // =========================================================================================
 
 public list[bool] isGuarded(exp:state(str name)) {
-	return [false];
+	// Note that 1 and 0 are always guarded.
+	return name == "0" || name == "1" ? [true] : [false];
 }
 
 public list[bool] isGuarded(exp:recursion(str name, EXP var)) {
