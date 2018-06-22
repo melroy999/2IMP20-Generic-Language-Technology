@@ -535,6 +535,13 @@ public tuple[ERR errors, list[str] names] checkStatement(stat:processStatement(s
 	return <errors, pNames>;
 }
 
+/*
+ * Since the scope of the symbols is local, we should look for symbols and errors in succession.
+ */
+public tuple[ERR errors, list[str] names] checkStatement(stat:processCaptionStatement(str name, STATEMENT initialState, list[STATEMENT] states, str caption), ERR errors, list[str] pNames) {
+	return checkStatement(processStatement(name, initialState, states), errors, pNames);
+}
+
 public ERR checkStatements(list[STATEMENT] statements) {
 	errors = [];
 	pNames = [];

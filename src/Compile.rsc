@@ -287,6 +287,23 @@ str compileStat(stat:processStatement(str name, STATEMENT initialState, list[STA
 	'\\end{tikzpicture}";
 }
 
+
+str compileStat(stat:processCaptionStatement(str name, STATEMENT initialState, list[STATEMENT] states, str caption)) {
+	// Clean up the caption.
+	caption = replaceAll(caption, "\"", "");
+
+	return
+	"\\begin{figure}
+	'    \\centering
+	'    <compileStat(processStatement(name, initialState, states))>
+	'    \\caption{<caption>}
+	'    \\label{fig:<toLowerCase(name)>}
+	'\\end{figure}";
+}
+
+
+
+
 public str compileProgram(PROGRAM P) {    
   	if(program(list[STATEMENT] statements) := P){    
 	
@@ -300,6 +317,7 @@ public str compileProgram(PROGRAM P) {
 		'
 		'\\begin{document} <for (m <- statements) {> 
 		'<compileStat(m)>
+		'\\vspace{2em}
 		'<}>\\end{document}";
   		
   		println(result);

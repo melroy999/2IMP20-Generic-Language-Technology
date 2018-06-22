@@ -2,10 +2,11 @@ module Syntax
 
 import Prelude;
 
-keyword PAKeywords = "state" | "initial" | "process" | "1" | "0" | "in" | "range" | "natural";
+keyword PAKeywords = "state" | "initial" | "process" | "1" | "0" | "in" | "range" | "natural" | "caption";
 				 	 
 lexical UpperCaseId = ([A-Z][A-Z0-9]* !>> [A-Z0-9]) \ PAKeywords;
 lexical Natural = [0-9]+;
+lexical String = "\"" ![\"]*  "\"";
 lexical LowerCaseId = [a-z]+ \ PAKeywords;
 
 layout Layout = WhitespaceAndComment* !>> [\ \t\n\r%];
@@ -18,7 +19,8 @@ lexical WhitespaceAndComment
 							 
 start syntax Program = program: ProcessStatement* body;
 
-syntax ProcessStatement = processStatement: "process" UpperCaseId name "{" InitialStateStatement initialstate ";" (StateStatement ";")* states "}";
+syntax ProcessStatement = processStatement: "process" UpperCaseId name "{" InitialStateStatement initialstate ";" (StateStatement ";")* states "}"
+ 					  | processCaptionStatement: "process" UpperCaseId name "{" InitialStateStatement initialstate ";" (StateStatement ";")* states "}" "caption" String caption;
 syntax StateStatement = stateStatement: "state" UpperCaseId name ":=" Expression exp
  					  | recursiveVarStatement: "state" UpperCaseId name "(" LowerCaseId var ")" ":=" Expression exp
  					  | recursiveConstStatement: "state" UpperCaseId name "(" Natural const ")" ":=" Expression exp

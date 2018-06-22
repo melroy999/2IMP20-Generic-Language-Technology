@@ -18,6 +18,7 @@ public data EXP = state(str name)
 			    ;
      
 public data STATEMENT = processStatement(str name, STATEMENT initialState, list[STATEMENT] states)
+					  | processCaptionStatement(str name, STATEMENT initialState, list[STATEMENT] states, str caption)
  					  | stateStatement(str name, EXP exp)
  					  | recursiveVarStatement(str name, str var, EXP exp)
  					  | recursiveConstStatement(str name, int const, EXP exp)
