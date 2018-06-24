@@ -445,7 +445,7 @@ public ERR checkExpression(exp:naturalContext(), ERR errors, list[SYM] symbols, 
 }
 
 public ERR checkStatement(stat:initialStatement(STATEMENT state), ERR errors, list[SYM] symbols, SYM symbol) {
-	if(!isStateSimple(state), b) {
+	if(!isStateSimple(state)) {
 		errors += <stat@location, "The initial state is not allowed to have the in keyword.">;
 		return errors;
 	}
@@ -473,9 +473,7 @@ public ERR checkStatement(stat:recursiveConstStatement(str name, int const, EXP 
 
 public ERR checkStatement(stat:contRecursiveVarStatement(str name, str var, EXP exp, EXP context), ERR errors, list[SYM] symbols, SYM symbol) {
 	// Is the range check superfluous?
-	if(!isRangeRequired(exp)) {
-		errors += <context@location, "The range definition is superfluous.">;
-	}
+	// Well it can't be, as we have a recursion variable as variable.
 	
 	// Is the expression guarded?
 	if(!all(b <- isGuarded(exp), b)) {

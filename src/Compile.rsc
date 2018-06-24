@@ -39,6 +39,11 @@ str drawState(NODE n, map[str, int] indents) {
 }
 
 str drawEdge(EDGE e, map[str, int] indents) {
+	// If we go to the same state, create a self-loop.
+	if(e.from == e.to) {
+		return "\\draw[-\>] (<e.from.id><e.from.n>) edge[loop above] node[midway, above] {<e.label>} (<e.to.id><e.to.n>);";
+	}
+	
 	// Place the label taking the direction of the edge in mind.
 	str placement = "midway";
 	

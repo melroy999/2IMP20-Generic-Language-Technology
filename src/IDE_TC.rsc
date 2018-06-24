@@ -38,6 +38,8 @@ public void compilePAProgram(Program x, loc l){
     p = implode(#PROGRAM, x);
     code = compileProgram(p);
 	text(code);
+	
+	writeFile(|project://PICO/src/output.tex|, code);
 }
 
 public set[Contribution] PA_CONTRIBS = {

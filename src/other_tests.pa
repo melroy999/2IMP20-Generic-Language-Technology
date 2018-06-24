@@ -1,0 +1,49 @@
+process PROCESS1 { 
+	// The first example here is the example shown before in the report.
+	
+    initial state A(0) := a.A(1) + 1 + a.0;
+    state A(n) := a.A(n + 1) in range(1, 3);
+    state A(4) := a.1;
+} caption "We do it once."
+
+process PROCESS2 { 
+	// As seen here, we can redefine the same process under another name.
+	// Note that the variable names are not in conflict.
+
+    initial state A(0) := a.A(1) + 1 + a.0;
+    state A(n) := a.A(n + 1) in range(1, 3);
+    state A(4) := a.1;
+} caption "We do it twice."
+
+process PROCESS3 {
+	// An example with a larger number of states.
+	// Here we mix recursive and non-recursive definitions. 
+	initial state B := a.C(0) + 1 + 0;
+	
+	// Note that we have to specify all states by hand here, as range is not allowed.
+	state C(0) := c.D(0) + c.D(1) + b.C(0);
+	state D(n) := d.E(n) + d.E(n + 1) + g.C(0) in range(0, 1);
+	
+	// Note that E(3)-E(5) are unreachable and are not plotted.
+	state E(n) := e.E(n) in range(0, 5);
+	
+	// With unreachable state F.
+	state F := 1;
+} caption "More complex this time."
+
+process PROCESS4 {
+	initial state B := a.C(0) + a.C(1) + a.C(2) + a.C(3) + a.C(4) + a.C(5);
+	
+	// Doing the same transition twice does not matter.
+	state C(n) := a.D(n) + a.D(n) in range(0, 2);
+	
+	// However, there is overlap if you define another label.
+	state C(n) := a.D(n) + b.D(n) in range(3, 5);
+	state D(n) := a.E in range(0, 2);
+	state D(n) := a.F in range(3, 5);
+	state E := 1;
+	
+	// Because of sorting, this gives ugly pictures.
+	/*state F := 1;*/
+	state F := a.B;
+}

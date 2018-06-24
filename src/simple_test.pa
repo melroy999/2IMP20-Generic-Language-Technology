@@ -1,0 +1,4 @@
+process SIMPLEPROCESS { 
+	// A rather simple example of a process.
+    initial state A := a.A + 1 + 0;
+}
