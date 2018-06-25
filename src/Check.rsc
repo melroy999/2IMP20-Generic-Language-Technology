@@ -1,4 +1,4 @@
-module Typecheck
+module Check
 
 import Prelude;
 import Abstract;

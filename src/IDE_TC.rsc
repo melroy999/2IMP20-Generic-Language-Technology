@@ -9,7 +9,7 @@ import vis::Render;
 
 import Syntax;
 import Abstract;
-import Typecheck;
+import Check;
 import Compile;
 
 //  define the language name and extension

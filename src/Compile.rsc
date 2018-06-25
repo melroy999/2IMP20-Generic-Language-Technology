@@ -2,7 +2,7 @@ module Compile
 
 import Prelude;
 import Abstract;
-import Typecheck;
+import Check;
 import Load;
 
 alias NODE = tuple[str id, bool isRec, int n];
