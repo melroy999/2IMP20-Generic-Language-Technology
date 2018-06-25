@@ -314,7 +314,7 @@ public str compileProgram(PROGRAM P) {
 	
 		str result = 
 		"
-		'\\documentclass[varwidth,border=20pt]{standalone}
+		'\\documentclass[varwidth=\\maxdimen,border=20pt]{standalone}
 		'\\usepackage{tikz}
 		'\\usetikzlibrary{arrows.meta}
 		'\\usetikzlibrary{shapes}
