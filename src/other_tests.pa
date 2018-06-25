@@ -32,7 +32,8 @@ process PROCESS3 {
 } caption "More complex this time."
 
 process PROCESS4 {
-	initial state B := a.C(0) + a.C(1) + a.C(2) + a.C(3) + a.C(4) + a.C(5);
+	// Brackets also work, and they are considered as guarded.
+	initial state B := a.(C(0) + C(1) + C(2) + C(3) + C(4) + C(5));
 	
 	// Doing the same transition twice does not matter.
 	state C(n) := a.D(n) + a.D(n) in range(0, 2);
